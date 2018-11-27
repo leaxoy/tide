@@ -40,11 +40,23 @@ async fn echo_form(msg: body::Form<Message>) -> body::Form<Message> {
 }
 
 fn main() {
+<<<<<<< HEAD
     let mut app = tide::ServerBuilder::new(());
+=======
+    let mut app = tide::App::new(());
+
+>>>>>>> 3e750752cd1f903a43953a3e2c9a9559d3eeb794
     app.at("/echo/string").post(echo_string);
     app.at("/echo/string_lossy").post(echo_string_lossy);
     app.at("/echo/vec").post(echo_vec);
     app.at("/echo/json").post(echo_json);
     app.at("/echo/form").post(echo_form);
+<<<<<<< HEAD
     app.serve("127.0.0.1:7878");
+=======
+
+    let address = "127.0.0.1:8000".to_owned();
+    println!("Server is listening on http://{}", address);
+    app.serve(address);
+>>>>>>> 3e750752cd1f903a43953a3e2c9a9559d3eeb794
 }
