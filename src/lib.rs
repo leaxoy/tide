@@ -12,7 +12,6 @@
     existential_type
 )]
 
-mod app;
 pub mod body;
 mod endpoint;
 mod extract;
@@ -21,14 +20,15 @@ pub mod middleware;
 mod request;
 mod response;
 mod router;
+mod server;
 
 pub use crate::{
-    app::{App, AppData},
     endpoint::Endpoint,
     extract::Extract,
     middleware::Middleware,
     request::{Compute, Computed, Request},
     response::{IntoResponse, Response},
     router::{Resource, Router},
+    server::{AppData, Server, ServerBuilder},
 };
 pub use path_table::RouteMatch;

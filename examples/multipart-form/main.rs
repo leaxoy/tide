@@ -5,7 +5,7 @@ extern crate serde_derive;
 
 use http::status::StatusCode;
 use std::io::Read;
-use tide::{body, App};
+use tide::{body, ServerBuilder};
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Message {
@@ -62,7 +62,7 @@ async fn upload_file(
 }
 
 fn main() {
-    let mut app = App::new(());
+    let mut app = ServerBuilder::new(());
 
     app.at("/upload_file").post(upload_file);
 

@@ -2,7 +2,7 @@
 extern crate cookie;
 
 use cookie::Cookie;
-use tide::{Compute, Computed, Request};
+use tide::{Compute, Computed, Request, Server, ServerBuilder};
 
 #[derive(Clone, Debug)]
 struct Cookies {
@@ -37,7 +37,7 @@ async fn hello_cookies(cookies: Computed<Cookies>) -> String {
 }
 
 fn main() {
-    let mut app = tide::App::new(());
+    let mut app = ServerBuilder::new(());
     app.at("/").get(hello_cookies);
-    app.serve("127.0.0.1:7878")
+    app.serve("127.0.0.1:7878");
 }

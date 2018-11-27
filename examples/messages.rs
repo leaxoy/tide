@@ -5,7 +5,7 @@ extern crate serde_derive;
 
 use http::status::StatusCode;
 use std::sync::{Arc, Mutex};
-use tide::{body, head, App, AppData};
+use tide::{body, head, ServerBuilder, AppData};
 
 #[derive(Clone)]
 struct Database {
@@ -75,7 +75,7 @@ async fn get_message(
 }
 
 fn main() {
-    let mut app = App::new(Database::new());
+    let mut app = ServerBuilder::new(Database::new());
 
     app.at("/message").post(new_message);
     app.at("/message/{}").get(get_message);

@@ -22,7 +22,7 @@ async fn add_two(Named(number): Named<Number>) -> String {
 }
 
 fn main() {
-    let mut app = tide::App::new(());
+    let mut app = tide::ServerBuilder::new(());
     app.at("add_two/{num}").get(add_two);
-    app.serve("127.0.0.1:8000");
+    app.serve("127.0.0.1:7878");
 }

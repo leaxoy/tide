@@ -5,6 +5,7 @@ use futures::{
 };
 use hyper::service::Service;
 use std::{
+    net::ToSocketAddrs,
     ops::{Deref, DerefMut},
     sync::Arc,
 };
@@ -22,23 +23,23 @@ use crate::{
 /// Apps are equipped with a handle to their own state (`Data`), which is available to all endpoints.
 /// This is a "handle" because it must be `Clone`, and endpoints are invoked with a fresh clone.
 /// They also hold a top-level router.
-pub struct App<Data> {
+pub struct ServerBuilder<Data> {
     data: Data,
     router: Router<Data>,
 }
 
-impl<Data: Clone + Send + Sync + 'static> App<Data> {
+impl<Data: Clone + Send + Sync + 'static> ServerBuilder<Data> {
     /// Set up a new app with some initial `data`.
-    pub fn new(data: Data) -> App<Data> {
+    pub fn new(data: Data) -> ServerBuilder<Data> {
         let logger = RootLogger::new();
-        let mut app = App {
+        let mut builder = ServerBuilder {
             data,
             router: Router::new(),
         };
 
         // Add RootLogger as a default middleware
-        app.middleware(logger);
-        app
+        builder.middleware(logger);
+        builder
     }
 
     /// Get the top-level router.
@@ -58,25 +59,29 @@ impl<Data: Clone + Send + Sync + 'static> App<Data> {
         self
     }
 
-    fn into_server(self) -> Server<Data> {
-        Server {
-            data: self.data,
-            router: Arc::new(self.router),
-        }
+    /// Just call `Server.serve(addr: A)`
+    pub fn serve<A: ToSocketAddrs>(self, addr: A) {
+        Server::from(self).serve(addr)
     }
+}
 
+#[derive(Clone)]
+pub struct Server<Data> {
+    data: Data,
+    router: Arc<Router<Data>>,
+}
+
+impl<Data: Clone + Send + Sync + 'static> Server<Data> {
     /// Start serving the app at the given address.
     ///
     /// Blocks the calling thread indefinitely.
-    pub fn serve<A: std::net::ToSocketAddrs>(self, addr: A) {
-        let server: Server<Data> = self.into_server();
-
+    pub fn serve<A: ToSocketAddrs>(self, addr: A) {
         // TODO: be more robust
         let addr = addr.to_socket_addrs().unwrap().next().unwrap();
 
         let server = hyper::Server::bind(&addr)
             .serve(move || {
-                let res: Result<_, std::io::Error> = Ok(server.clone());
+                let res: Result<_, std::io::Error> = Ok(self.clone());
                 res
             })
             .compat()
@@ -89,10 +94,13 @@ impl<Data: Clone + Send + Sync + 'static> App<Data> {
     }
 }
 
-#[derive(Clone)]
-struct Server<Data> {
-    data: Data,
-    router: Arc<Router<Data>>,
+impl<Data: Clone + Send + Sync + 'static> From<ServerBuilder<Data>> for Server<Data> {
+    fn from(b: ServerBuilder<Data>) -> Self {
+        Server {
+            data: b.data,
+            router: Arc::new(b.router),
+        }
+    }
 }
 
 impl<Data: Clone + Send + Sync + 'static> Service for Server<Data> {
@@ -149,6 +157,7 @@ impl<T> Deref for AppData<T> {
         &self.0
     }
 }
+
 impl<T> DerefMut for AppData<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
